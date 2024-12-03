@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-const program = new Command();
+import fs from 'fs'
 
-let task_storage = {};
+const program = new Command();
 
 program
   .name("todo-cli")
@@ -14,12 +14,41 @@ program.command("add")
   .description("Add task/tasks")
   .argument('<tasks...>', 'Task to add')
   .action((tasks) => {
-    const date = new Date().toLocaleDateString();
-    if (!task_storage[date]) {
-        task_storage[date] = [];
-    }
-    task_storage[date].push(...tasks);
-    console.log(task_storage)
+    const date = new Date().toLocaleDateString()
+    
+    fs.readFile('./task.json', 'utf-8', (err, dataString) => {
+      if(err) {
+        console.log(err)
+      } else {
+        const data = JSON.parse(dataString)
+        
+        if(!data.global[date]) {
+          data.global[date] = []
+        } 
+
+        data.global[date].push(...tasks)
+
+        fs.writeFile('./task.json', JSON.stringify(data), (err) => {
+          if(err) {
+            console.log(err)
+          } else {
+            console.log("task added")
+          }
+        })
+      }
+    })
   });
 
-  program.parse();
+program.command("global")
+  .description("To show all global task")
+  .action(function() {
+    fs.readFile('./task.json', 'utf-8', (err, taskString) => {
+      if(err) {
+        console.log(err)
+      } else {
+        console.log(JSON.parse(taskString))
+      }
+    })
+  })
+
+program.parse();
