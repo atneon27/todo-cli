@@ -40,7 +40,7 @@ program.command("add")
   });
 
 program.command("global")
-  .description("To show all global task")
+  .description("Show all global task")
   .action(function() {
     fs.readFile('./task.json', 'utf-8', (err, taskString) => {
       if(err) {
