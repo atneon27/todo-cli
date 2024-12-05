@@ -5,7 +5,7 @@ import fs from 'fs';
 
 // we can use fs/promise to use async/await in fs
 
-function updateJSON(path, updateCallback, finalCallback) {
+function updateJSON(path, logicCallback, finalCallback) {
   fs.readFile(path, 'utf-8', (readErr, dataString) => {
     if(readErr) {
       finalCallback(readErr)
@@ -18,7 +18,7 @@ function updateJSON(path, updateCallback, finalCallback) {
       finalCallback(parsErr)
     }
 
-    object = updateCallback(object)
+    object = logicCallback(object)
 
     fs.writeFile(path, JSON.stringify(object), 'utf-8', (writeErr) => {
       if(writeErr) {
@@ -114,5 +114,31 @@ program.command("task")
       }
     })
   })
+
+
+program.command("today")
+  .description("list all present day tasks")
+  .action(() => {
+    const date = new Date().toLocaleDateString()
+
+    fs.readFile('./task.json', 'utf-8', (err, dataString) => {
+      if(err) {
+        console.log(err)
+        return
+      }
+      
+      try {
+        const data = JSON.parse(dataString)
+        const currTasks = data.global[date]
+
+        currTasks.forEach((val) => {
+          console.log("id: " + val.id + "\n" + "title: " + val.title + "\n" + "description: " + val.description + "\n" + "completed: " + val.completed + "\n")
+        })
+      } catch(err) {
+        console.log(err)
+      }
+    });
+  })
+
 
 program.parse();
