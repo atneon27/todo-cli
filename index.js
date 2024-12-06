@@ -144,7 +144,7 @@ program.command("today")
     })
   })
 
-program.command("completed")
+program.command("complete")
   .description("list all list all completed tasks for today")
   .action(() => {
     readJSON(json_path, (data) => {
@@ -157,6 +157,19 @@ program.command("completed")
       }
     }, (err) => {
       console.log(err)
+    })
+  })
+
+program.command("incomplete")
+  .description("list all the incomplete tasks for today")
+  .action(() => {
+    readJSON(json_path, (data) => {
+      const val = data.global[date]
+      for(let i = 0; i < val.length; i++) {
+        if(val[i].completed === false) {
+          console.log(val[i].id, val[i].title, val[i].description)
+        }
+      }
     })
   })
 
