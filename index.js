@@ -5,8 +5,8 @@ import fs from 'fs';
 
 // we can use fs/promise to use async/await in fs
 
-function updateJSON(path, logicCallback, finalCallback) {
-  fs.readFile(path, 'utf-8', (readErr, dataString) => {
+function updateJSON(json_path, logicCallback, finalCallback) {
+  fs.readFile(json_path, 'utf-8', (readErr, dataString) => {
     if(readErr) {
       finalCallback(readErr)
     }
@@ -20,7 +20,7 @@ function updateJSON(path, logicCallback, finalCallback) {
 
     object = logicCallback(object)
 
-    fs.writeFile(path, JSON.stringify(object), 'utf-8', (writeErr) => {
+    fs.writeFile(json_path, JSON.stringify(object), 'utf-8', (writeErr) => {
       if(writeErr) {
         finalCallback(writeErr)
       } else {
@@ -30,7 +30,25 @@ function updateJSON(path, logicCallback, finalCallback) {
   })
 }
 
+function readJSON(json_path, readCallback, errCallback) {
+  fs.readFile(json_path, 'utf-8', (err, dataString) => {
+    if(err) {
+      errCallback(err)
+      return
+    }
+
+    try {
+      const data = JSON.parse(dataString)
+      readCallback(data)
+    } catch(readErr) {
+      errCallback(readErr)
+    }
+  })
+}
+
 const program = new Command();
+const json_path = "/home/aryan/folsep/100x/project/todo-cli/task.json"
+const date = new Date().toLocaleDateString()
 
 program
   .name("todo-cli")
@@ -41,9 +59,7 @@ program.command("add")
   .description("Add task/tasks")
   .argument('<tasks...>', 'Task to add')
   .action((tasks) => {
-    const date = new Date().toLocaleDateString()
-    
-    fs.readFile('./task.json', 'utf-8', (err, dataString) => {
+    fs.readFile(json_path, 'utf-8', (err, dataString) => {
       if(err) {
         console.log(err)
       } else {
@@ -55,7 +71,7 @@ program.command("add")
 
         data.global[date].push(...tasks)
 
-        fs.writeFile('./task.json', JSON.stringify(data), (err) => {
+        fs.writeFile(json_path, JSON.stringify(data), (err) => {
           if(err) {
             console.log(err)
           } else {
@@ -69,7 +85,7 @@ program.command("add")
 program.command("global")
   .description("Show all global task")
   .action(function() {
-    fs.readFile('./task.json', 'utf-8', (err, taskString) => {
+    fs.readFile(json_path, 'utf-8', (err, taskString) => {
       if(err) {
         console.log(err)
       } else {
@@ -91,9 +107,7 @@ program.command("task")
       return
     }
 
-    const date = new Date().toLocaleDateString()
-
-    updateJSON('./task.json', (object) => {
+    updateJSON(json_path, (object) => {
       if(!object.global[date]) {
         object.global[date] = []
       }
@@ -119,26 +133,31 @@ program.command("task")
 program.command("today")
   .description("list all present day tasks")
   .action(() => {
-    const date = new Date().toLocaleDateString()
-
-    fs.readFile('./task.json', 'utf-8', (err, dataString) => {
-      if(err) {
-        console.log(err)
-        return
+    readJSON(json_path, (data) => {
+      const val = data.global[date]
+      for(let i = 0; i < val.length; i++) {
+        // format printing
+        console.log(val[i].id, val[i].title, val[i].description)
       }
-      
-      try {
-        const data = JSON.parse(dataString)
-        const currTasks = data.global[date]
-
-        currTasks.forEach((val) => {
-          console.log("id: " + val.id + "\n" + "title: " + val.title + "\n" + "description: " + val.description + "\n" + "completed: " + val.completed + "\n")
-        })
-      } catch(err) {
-        console.log(err)
-      }
-    });
+    }, (err) => {
+      console.log(err)
+    })
   })
 
+program.command("completed")
+  .description("list all list all completed tasks for today")
+  .action(() => {
+    readJSON(json_path, (data) => {
+      const val = data.global[date]
+      for(let i = 0; i < val.length; i++) {
+        if(val[i].completed === true) {
+          // format printing
+          console.log(val[i].id, val[i].title, val[i].description)
+        }
+      }
+    }, (err) => {
+      console.log(err)
+    })
+  })
 
 program.parse();
