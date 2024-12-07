@@ -113,7 +113,7 @@ program.command("task")
       }
 
       object.global[date].push({
-        id: 1,
+        id: object.global[date].length + 1,
         title: option.title,
         description: option.description.join(" "),
         completed: false
@@ -171,6 +171,57 @@ program.command("incomplete")
         }
       }
     })
+  })
+
+program.command("find")
+  .description("find the task on the basis of title")
+  .option('-t, --title <title>', 'Task Title')
+  .action((option) => {
+    if(!option.title) {
+      console.log("error: no title")
+      return
+    }
+
+    readJSON(json_path, (data) => {
+      const val = data.global[date]
+      const task = val.find((obj) => {
+        return obj.title == option.title
+      })
+
+      console.log(task.id, task.title, task.description, task.completed)
+    }, (err) => {
+      console.log(err)
+    })
+  })
+
+program.command("mark")
+  .description("marks the give title as completed")
+  .option('-t, --title <title>', 'Task Title')
+  .action((option) => {
+    if(!option.title) {
+      console.log("error: no title")
+      return
+    }
+
+    updateJSON(json_path, (data) => {
+      let tasks = data.global[date]
+      
+      for(let i = 0; i < tasks.length; i++) {
+        if(tasks[i].title === option.title) {
+          tasks[i].completed = true
+        }
+      }
+
+      data.global[date] = tasks
+      return data
+    }, (err, msg) => {
+      if(err) {
+        console.log(err)
+      } else {
+        console.log(msg)
+      }
+    })
+    
   })
 
 program.parse();
