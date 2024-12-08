@@ -221,7 +221,46 @@ program.command("mark")
         console.log(msg)
       }
     })
-    
+  })
+
+program.command("update")
+  .option('-f, --find <find>', 'title of task to be updated')
+  .option('-t, --title <title>', 'new task title')
+  .option('-d, --description <description...>', 'new task description')
+  .action((option) => {
+    if(!option.find) {
+      console.log("missing title to find!")
+      return
+    }
+    if(!option.title) {
+      console.log("missing title to update!")
+      return
+    }
+
+    if(!option.description) {
+      console.log("missing description to update!")
+      return
+    }
+
+    updateJSON(json_path, (data) => {
+      let tasks = data.global[date]
+
+      for(let i = 0; i < tasks.length; i++) {
+        if(tasks[i].title === option.find) {
+          tasks[i].title = option.title
+          tasks[i].description = option.description.join(" ")
+        }
+      }
+
+      data.global[date] = tasks
+      return data
+    }, (err, msg) => {
+      if(err) {
+        console.log(err)
+      } else {
+        console.log(msg)
+      }
+    })    
   })
 
 program.parse();
